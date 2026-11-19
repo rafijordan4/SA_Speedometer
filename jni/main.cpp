@@ -126,7 +126,7 @@ static void DrawSpeedometer()
     float s = H / 448.0f;                 // skala seragam supaya lingkaran tetap bulat
     float cx = W * 0.5f;
     float cy = H - 12.0f * s;             // pusat setengah lingkaran, mepet bawah tengah
-    float R = 64.0f * s;
+    float R = 70.0f * s;
 
     // latar gelap setengah lingkaran
     {
