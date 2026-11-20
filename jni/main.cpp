@@ -195,20 +195,23 @@ static void DrawSpeedometer()
     CFont::SetOrientation(ALIGN_CENTER);
     CFont::SetBackground(false, false);
     CFont::SetWrapx(W);
-    CFont::SetCentreSize(W);
     CFont::SetFontStyle(FONT_SUBTITLES);
     CFont::SetProportional(true);
     CFont::SetDropShadowPosition(1);
     CFont::SetDropColor(CRGBA(0, 0, 0, 255));
+    Step("5a font siap");
 
     snprintf(buf, sizeof(buf), "%d", (int)(g_fShownSpeed + 0.5f));
     CFont::SetColor(CRGBA(255, 255, 255, 255));
     CFont::SetScale((0.55f * W) / 640.0f, (1.1f * H) / 448.0f);
     CFont::PrintString(cx, cy - 46.0f * s, buf);
+    Step("5b angka dicetak");
 
     CFont::SetColor(CRGBA(200, 200, 200, 255));
     CFont::SetScale((0.26f * W) / 640.0f, (0.52f * H) / 448.0f);
-    CFont::PrintString(cx, cy - 22.0f * s, "KM/H");
+    char lbl[8] = "KM/H";
+    CFont::PrintString(cx, cy - 22.0f * s, lbl);
+    Step("5c label dicetak");
 
     snprintf(buf, sizeof(buf), "GAS %d%%", (int)(gasFrac * 100.0f + 0.5f));
     CFont::SetColor(CRGBA(60, 190, 255, 255));
