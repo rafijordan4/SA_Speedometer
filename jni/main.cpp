@@ -88,6 +88,45 @@ static float GetGas(CVehicle* v)
     return Clamp01(fabsf(g));
 }
 
+static void Seg(float x1, float y1, float x2, float y2, const CRGBA& c)
+{
+    CSprite2d::DrawRect(CRect(x1, y2, x2, y1), c);
+}
+
+static void DrawDigit(float x, float y, float w, float h, int d, const CRGBA& c)
+{
+    static const unsigned char SEG[10] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
+    if(d < 0 || d > 9) return;
+    unsigned char m = SEG[d];
+    float t = w * 0.24f;
+    float mid = y + h * 0.5f;
+    if(m & 1)  Seg(x + t, y, x + w - t, y + t, c);
+    if(m & 64) Seg(x + t, mid - t * 0.5f, x + w - t, mid + t * 0.5f, c);
+    if(m & 8)  Seg(x + t, y + h - t, x + w - t, y + h, c);
+    if(m & 32) Seg(x, y + t, x + t, mid, c);
+    if(m & 2)  Seg(x + w - t, y + t, x + w, mid, c);
+    if(m & 16) Seg(x, mid, x + t, y + h - t, c);
+    if(m & 4)  Seg(x + w - t, mid, x + w, y + h - t, c);
+}
+
+static void DrawNumber(float cx, float y, float w, float h, int value, const CRGBA& c)
+{
+    if(value < 0) value = 0;
+    if(value > 9999) value = 9999;
+    int digits[4];
+    int n = 0;
+    do { digits[n++] = value % 10; value /= 10; } while(value > 0 && n < 4);
+    float gap = w * 0.35f;
+    float total = n * w + (n - 1) * gap;
+    float x = cx - total * 0.5f;
+    for(int i = n - 1; i >= 0; --i)
+    {
+        DrawDigit(x + w * 0.08f, y + w * 0.08f, w, h, digits[i], CRGBA(0, 0, 0, 255));
+        DrawDigit(x, y, w, h, digits[i], c);
+        x += w + gap;
+    }
+}
+
 static int g_nLogFrames = 0;
 static void Step(const char* m)
 {
@@ -173,36 +212,10 @@ static void DrawSpeedometer()
     }
 
     Step("5 jarum selesai");
-    // ---- teks ----
-    char buf[24];
-    CFont::SetOrientation(ALIGN_CENTER);
-    CFont::SetBackground(false, false);
-    CFont::SetWrapx(W);
-    CFont::SetFontStyle(FONT_SUBTITLES);
-    CFont::SetProportional(true);
-    CFont::SetDropShadowPosition(1);
-    CFont::SetDropColor(CRGBA(0, 0, 0, 255));
-    Step("5a font siap");
-
-    snprintf(buf, sizeof(buf), "%d", (int)(g_fShownSpeed + 0.5f));
-    CFont::SetColor(CRGBA(255, 255, 255, 255));
-    CFont::SetScale((0.55f * W) / 640.0f, (1.1f * H) / 448.0f);
-    CFont::PrintString(cx, cy - 46.0f * s, buf);
-    Step("5b angka dicetak");
-
-    CFont::SetColor(CRGBA(200, 200, 200, 255));
-    CFont::SetScale((0.26f * W) / 640.0f, (0.52f * H) / 448.0f);
-    char lbl[8] = "KM/H";
-    CFont::PrintString(cx, cy - 22.0f * s, lbl);
-    Step("5c label dicetak");
-
-    snprintf(buf, sizeof(buf), "GAS %d%%", (int)(gasFrac * 100.0f + 0.5f));
-    CFont::SetColor(CRGBA(60, 190, 255, 255));
-    CFont::SetScale((0.26f * W) / 640.0f, (0.52f * H) / 448.0f);
-    CFont::PrintString(cx, cy - 11.0f * s, buf);
-
-    Step("6 teks dikirim");
-    CFont::RenderFontBuffer();
+    // angka kecepatan (digambar dengan kotak, tanpa font game)
+    DrawNumber(cx, cy - 36.0f * s, 8.0f * s, 16.0f * s, (int)(g_fShownSpeed + 0.5f), CRGBA(255, 255, 255, 255));
+    // angka gas (persen, lebih kecil, warna biru)
+    DrawNumber(cx, cy - 16.0f * s, 5.0f * s, 10.0f * s, (int)(gasFrac * 100.0f + 0.5f), CRGBA(60, 190, 255, 255));
     Step("7 selesai");
 }
 
