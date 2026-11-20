@@ -88,17 +88,31 @@ static float GetGas(CVehicle* v)
     return Clamp01(fabsf(g));
 }
 
+static int g_nLogFrames = 0;
+static void Step(const char* m)
+{
+    if(g_nLogFrames > 3) return;
+    FILE* f = fopen("/storage/emulated/0/Android/data/com.rockstargames.gtasa/files/speedometer_log.txt", "a");
+    if(!f) return;
+    fprintf(f, "%s\n", m);
+    fflush(f);
+    fclose(f);
+}
+
 static void DrawSpeedometer()
 {
     CPlayerPed* player = FindPlayerPed(-1);
     if(!player) return;
-    CVehicle* veh = FindPlayerVehicle(-1, false);
+    CVehicle* veh = NULL;
+    if(player->bInVehicle) veh = player->m_pVehicle;
     if(!veh)
     {
         g_pLastVeh = NULL;
         return;
     }
 
+    ++g_nLogFrames;
+    Step("1 kendaraan ketemu");
     // ---- ambil data (aman dari NaN) ----
     float speed = veh->m_vecMoveSpeed.Magnitude() * 180.0f; // 1 unit game ~ 180 km/jam
     if(!__builtin_isfinite(speed) || speed < 0.0f) speed = 0.0f;
@@ -126,8 +140,9 @@ static void DrawSpeedometer()
     float s = H / 448.0f;                 // skala seragam supaya lingkaran tetap bulat
     float cx = W * 0.5f;
     float cy = H - 12.0f * s;             // pusat setengah lingkaran, mepet bawah tengah
-    float R = 70.0f * s;
+    float R = 64.0f * s;
 
+    Step("2 data siap");
     // latar gelap setengah lingkaran
     {
         float rr = R + 6.0f * s;
@@ -138,12 +153,14 @@ static void DrawSpeedometer()
         }
     }
 
+    Step("3 latar selesai");
     // busur kecepatan (luar)
     DrawArc(cx, cy, R, 3.6f * s, 3.0f * s, frac, true, CRGBA(255, 255, 255, 255), CRGBA(45, 45, 45, 220));
 
     // busur gas (dalam)
     DrawArc(cx, cy, R * 0.72f, 2.6f * s, 2.6f * s, gasFrac, false, CRGBA(60, 190, 255, 255), CRGBA(45, 45, 45, 220));
 
+    Step("4 busur selesai");
     // garis penunjuk
     {
         const float PI = 3.14159265f;
@@ -155,6 +172,7 @@ static void DrawSpeedometer()
         }
     }
 
+    Step("5 jarum selesai");
     // ---- teks ----
     char buf[24];
     CFont::SetOrientation(ALIGN_CENTER);
@@ -180,7 +198,9 @@ static void DrawSpeedometer()
     CFont::SetScale((0.26f * W) / 640.0f, (0.52f * H) / 448.0f);
     CFont::PrintString(cx, cy - 11.0f * s, buf);
 
+    Step("6 teks dikirim");
     CFont::RenderFontBuffer();
+    Step("7 selesai");
 }
 
 ON_MOD_LOAD()
